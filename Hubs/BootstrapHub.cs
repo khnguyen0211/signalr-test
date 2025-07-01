@@ -10,12 +10,14 @@ namespace WarpBootstrap.Hubs
         private readonly IFileUploadService _fileUploadService;
         private readonly IEncryptionService _encryptionService;
         private readonly IConnectionManagerService _connectionManager;
+        private readonly IExtractionService _extractionService;
 
         public BootstrapHub()
         {
             _fileUploadService = FileUploadService.Instance;
             _encryptionService = EncryptionService.Instance;
             _connectionManager = ConnectionManagerService.Instance;
+            _extractionService = ExtractionService.Instance;
         }
 
         public async Task SendMessage(string message)
@@ -109,6 +111,62 @@ namespace WarpBootstrap.Hubs
             catch (Exception ex)
             {
                 await Clients.Caller.SendAsync("ReceiveMessage", $"Upload completion failed: {ex.Message}");
+            }
+        }
+
+        // New extraction-related methods
+        public async Task GetArchiveInfo(string fileName)
+        {
+            try
+            {
+                if (!_connectionManager.IsConnectionActive(Context.ConnectionId))
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessage", "Error: Connection not authorized");
+                    return;
+                }
+
+                var filePath = Path.Combine(Path.GetTempPath(), "Warp", "Compress", $"{Context.ConnectionId}_{fileName}");
+
+                if (!File.Exists(filePath))
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessage", "Error: File not found");
+                    return;
+                }
+
+                var archiveInfo = await _extractionService.GetArchiveInfoAsync(filePath);
+                await Clients.Caller.SendAsync("ArchiveInfo", archiveInfo);
+            }
+            catch (Exception ex)
+            {
+                await Clients.Caller.SendAsync("ReceiveMessage", $"Failed to get archive info: {ex.Message}");
+            }
+        }
+
+        public async Task GetExtractionProgress()
+        {
+            try
+            {
+                if (!_connectionManager.IsConnectionActive(Context.ConnectionId))
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessage", "Error: Connection not authorized");
+                    return;
+                }
+
+                var extractionService = ExtractionService.Instance;
+                var progress = extractionService.GetExtractionProgress(Context.ConnectionId);
+
+                if (progress != null)
+                {
+                    await Clients.Caller.SendAsync("ExtractionProgress", progress);
+                }
+                else
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessage", "No extraction in progress");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Clients.Caller.SendAsync("ReceiveMessage", $"Failed to get extraction progress: {ex.Message}");
             }
         }
 

@@ -7,7 +7,6 @@ namespace WarpBootstrap.Services.Implementations
     {
         private static readonly Lazy<ConnectionManagerService> _instance = new(() => new ConnectionManagerService());
         public static ConnectionManagerService Instance => _instance.Value;
-
         private readonly ConcurrentDictionary<string, DateTime> _activeConnections = new();
         private readonly object _lockObject = new object();
         private const int MAX_CONNECTIONS = 1; // Only allow 1 connection

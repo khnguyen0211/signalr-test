@@ -13,13 +13,15 @@ namespace WarpBootstrap.Services.Implementations
         private readonly ConcurrentDictionary<string, UploadSession> _activeSessions = new();
         private readonly IFileValidationService _validationService;
         private readonly IEncryptionService _encryptionService;
+        private readonly IExtractionService _extractionService;
         private readonly string _uploadFolder;
 
         private FileUploadService()
         {
             _validationService = FileValidationService.Instance;
             _encryptionService = EncryptionService.Instance;
-            _uploadFolder = Path.Combine(Path.GetTempPath(), "Warp/Compress");
+            _extractionService = ExtractionService.Instance;
+            _uploadFolder = Path.Combine(Path.GetTempPath(), "Warp", "Compress");
         }
 
         public string StartUploadAsync(string connectionId, UploadMetaData metaData)
@@ -104,11 +106,34 @@ namespace WarpBootstrap.Services.Implementations
                 // Calculate server-side checksum for verification
                 var serverChecksum = CalculateFileChecksum(session.FilePath);
 
-                return $"Upload completed successfully. Server checksum: {serverChecksum}";
+                // Check if the uploaded file is an archive and extract it
+                string extractionMessage = "";
+                if (_extractionService.IsSupportedArchive(session.FileName))
+                {
+                    Console.WriteLine($"[Extraction] Starting extraction for: {session.FileName}");
+
+                    var extractionResult = await _extractionService.ExtractArchiveAsync(
+                        session.FilePath,
+                        connectionId
+                    );
+
+                    if (extractionResult.Success)
+                    {
+                        extractionMessage = $"\nExtraction completed: {extractionResult.FileCount} files extracted to {extractionResult.ExtractionPath}";
+                        Console.WriteLine($"[Extraction Success] {extractionResult.FileCount} files extracted");
+                    }
+                    else
+                    {
+                        extractionMessage = $"\nExtraction failed: {extractionResult.ErrorMessage}";
+                        Console.WriteLine($"[Extraction Failed] {extractionResult.ErrorMessage}");
+                    }
+                }
+
+                return $"Upload completed successfully. Server checksum: {serverChecksum}{extractionMessage}";
             }
-            catch (Exception _ex)
+            catch (Exception ex)
             {
-                Console.WriteLine($"{_ex.Message}");
+                Console.WriteLine($"[EndUpload Error] {ex.Message}");
                 await CleanupConnectionAsync(connectionId);
                 throw;
             }
@@ -138,6 +163,9 @@ namespace WarpBootstrap.Services.Implementations
             }
 
             _encryptionService.RemoveEncryptionKey(connectionId);
+
+            // Note: We're not cleaning up extracted files as per requirement
+            // await _extractionService.CleanupExtractionAsync(connectionId);
         }
 
         private string CalculateFileChecksum(string filePath)

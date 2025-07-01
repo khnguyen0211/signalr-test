@@ -10,8 +10,13 @@ namespace WarpBootstrap.Services.Implementations
         private static readonly Lazy<FileValidationService> _instance = new(() => new FileValidationService());
         public static FileValidationService Instance => _instance.Value;
 
-        private readonly string[] _allowedExtensions = { ".zip", ".tar", ".gz", ".7z" };
-        private readonly long _maxFileSize = 100 * 1024 * 1024; // 100MB
+        // Updated to include more archive formats
+        private readonly string[] _allowedExtensions = {
+            ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz",
+            ".tar.gz", ".tar.bz2", ".tgz"
+        };
+
+        private readonly long _maxFileSize = 500 * 1024 * 1024; // Increased to 500MB for archives
         private readonly HashSet<char> _invalidChars;
 
         private FileValidationService()
@@ -30,6 +35,11 @@ namespace WarpBootstrap.Services.Implementations
 
             if (fileName.Any(c => _invalidChars.Contains(c)))
                 return false;
+
+            // Special handling for .tar.gz files
+            if (fileName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase) ||
+                fileName.EndsWith(".tar.bz2", StringComparison.OrdinalIgnoreCase))
+                return true;
 
             var extension = Path.GetExtension(fileName).ToLowerInvariant();
             return _allowedExtensions.Contains(extension);
@@ -53,6 +63,18 @@ namespace WarpBootstrap.Services.Implementations
         {
             var extension = Path.GetExtension(originalFileName);
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(originalFileName);
+
+            // Special handling for double extensions like .tar.gz
+            if (originalFileName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+            {
+                extension = ".tar.gz";
+                nameWithoutExtension = originalFileName.Substring(0, originalFileName.Length - 7);
+            }
+            else if (originalFileName.EndsWith(".tar.bz2", StringComparison.OrdinalIgnoreCase))
+            {
+                extension = ".tar.bz2";
+                nameWithoutExtension = originalFileName.Substring(0, originalFileName.Length - 8);
+            }
 
             // Remove invalid characters
             var safeNameBuilder = new StringBuilder();
