@@ -116,20 +116,21 @@ namespace WarpBootstrap.Services.Implementations
                         session.FilePath,
                         connectionId
                     );
-
+                    extractionMessage = extractionResult.ExtractionPath;
                     if (extractionResult.Success)
                     {
-                        extractionMessage = $"\nExtraction completed: {extractionResult.FileCount} files extracted to {extractionResult.ExtractionPath}";
+                        //extractionMessage = $"\nExtraction completed: {extractionResult.FileCount} files extracted to {extractionResult.ExtractionPath}";
                         Console.WriteLine($"[Extraction Success] {extractionResult.FileCount} files extracted");
                     }
                     else
                     {
-                        extractionMessage = $"\nExtraction failed: {extractionResult.ErrorMessage}";
+                        //extractionMessage = $"\nExtraction failed: {extractionResult.ErrorMessage}";
                         Console.WriteLine($"[Extraction Failed] {extractionResult.ErrorMessage}");
                     }
                 }
 
-                return $"Upload completed successfully. Server checksum: {serverChecksum}{extractionMessage}";
+                //return $"Upload completed successfully. Server checksum: {serverChecksum}{extractionMessage}";
+                return extractionMessage;
             }
             catch (Exception ex)
             {

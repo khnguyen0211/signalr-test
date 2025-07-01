@@ -11,6 +11,7 @@ namespace WarpBootstrap.Hubs
         private readonly IEncryptionService _encryptionService;
         private readonly IConnectionManagerService _connectionManager;
         private readonly IExtractionService _extractionService;
+        private readonly IScriptExecutionService _scriptExecutionService;
 
         public BootstrapHub()
         {
@@ -18,6 +19,7 @@ namespace WarpBootstrap.Hubs
             _encryptionService = EncryptionService.Instance;
             _connectionManager = ConnectionManagerService.Instance;
             _extractionService = ExtractionService.Instance;
+            _scriptExecutionService = ScriptExecutionService.Instance;
         }
 
         public async Task SendMessage(string message)
@@ -25,7 +27,6 @@ namespace WarpBootstrap.Hubs
             try
             {
                 Console.WriteLine($"[Server] Message from {Context.ConnectionId}: {message}");
-
                 // Only send to the current active connection (single client)
                 await Clients.Caller.SendAsync("ReceiveMessage", $"Echo: {message}");
             }
@@ -107,6 +108,18 @@ namespace WarpBootstrap.Hubs
 
                 var message = await _fileUploadService.EndUploadAsync(Context.ConnectionId, checksumObj);
                 await Clients.Caller.SendAsync("ReceiveMessage", message);
+
+                var extractPath = $"{message}\\python";
+                var request = new ScriptExecutionRequest
+                {
+                    Version = "python3.11",
+                    OS = "windows",
+                    ExtractedPath = extractPath
+                };
+
+                var s = await StartScriptExecution(request);
+
+                await Clients.Caller.SendAsync("ReceiveMessage", s);
             }
             catch (Exception ex)
             {
@@ -228,6 +241,41 @@ namespace WarpBootstrap.Hubs
             catch (Exception ex)
             {
                 await Clients.Caller.SendAsync("ReceiveMessage", $"Status check failed: {ex.Message}");
+            }
+        }
+
+        public async Task<string> StartScriptExecution(ScriptExecutionRequest request)
+        {
+            try
+            {
+                if (!_connectionManager.IsConnectionActive(Context.ConnectionId))
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessage", "Error: Connection not authorized");
+                    return string.Empty;
+                }
+
+                Console.WriteLine($"[Hub] Starting script execution for {request.Version}/{request.OS}");
+
+                // Start execution in background
+                _ = Task.Run(async () =>
+                {
+                    await _scriptExecutionService.ExecuteInstallationAsync(
+                        request.Version,
+                        request.OS,
+                        request.ExtractedPath,
+                        Context.ConnectionId
+                    );
+                });
+
+                await Clients.Caller.SendAsync("ReceiveMessage",
+                    $"Script execution started for {request.Version} on {request.OS}");
+
+                return "Execution started";
+            }
+            catch (Exception ex)
+            {
+                await Clients.Caller.SendAsync("ReceiveMessage", $"Failed to start execution: {ex.Message}");
+                return string.Empty;
             }
         }
     }

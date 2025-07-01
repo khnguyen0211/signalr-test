@@ -66,22 +66,5 @@ namespace WarpBootstrap.Services.Implementations
         {
             return MAX_CONNECTIONS;
         }
-
-        // Additional method to force disconnect all connections (if needed)
-        public void DisconnectAllConnections()
-        {
-            lock (_lockObject)
-            {
-                var connections = _activeConnections.Keys.ToList();
-                _activeConnections.Clear();
-                Console.WriteLine($"[Force Disconnect] Removed {connections.Count} connections");
-            }
-        }
-
-        // Get connection info for monitoring
-        public Dictionary<string, DateTime> GetConnectionDetails()
-        {
-            return new Dictionary<string, DateTime>(_activeConnections);
-        }
     }
 }

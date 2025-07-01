@@ -12,8 +12,6 @@ string certPath = envConfig.CertPath;
 string password = envConfig.Password;
 int serverPort = envConfig.ServerPort;
 
-Console.WriteLine($"{clientHost} - {certPath} - {password} - {serverPort}");
-
 // Configure Kestrel Server
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {

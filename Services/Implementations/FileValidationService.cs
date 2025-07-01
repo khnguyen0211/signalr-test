@@ -16,7 +16,7 @@ namespace WarpBootstrap.Services.Implementations
             ".tar.gz", ".tar.bz2", ".tgz"
         };
 
-        private readonly long _maxFileSize = 500 * 1024 * 1024; // Increased to 500MB for archives
+        private readonly long _maxFileSize = 100 * 1024 * 1024; // Increased to 100MB for archives
         private readonly HashSet<char> _invalidChars;
 
         private FileValidationService()
