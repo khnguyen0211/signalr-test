@@ -1,7 +1,4 @@
-using WarpBootstrap.FileProcessing.Abstractions;
 using WarpBootstrap.Hubs;
-using WarpBootstrap.Services.Implementations;
-using WarpBootstrap.Services.Interfaces;
 using WarpBootstrap.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,8 +41,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<ZipExtractor>();
 
-builder.Services.AddScoped<IArchiveExtractor, ZipArchiveExtractor>();
-builder.Services.AddScoped<IInstallerService, InstallerService>();
 
 // Register services
 builder.Services.AddSignalR(e =>
@@ -60,6 +55,6 @@ app.UseRouting();
 app.UseCors("AllowFrontend");
 
 // Map SignalR hubs
-app.MapHub<ChatHub>("/chatHub");
+app.MapHub<BootstrapHub>("/chatHub");
 
 app.Run();

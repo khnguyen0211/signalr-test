@@ -2,7 +2,7 @@
 {
     public class Checksum
     {
-        public string ChecksumValue { get; set; } = "";
+        public string ChecksumValue { get; set; } = string.Empty;
 
     }
 }
