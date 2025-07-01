@@ -1,0 +1,87 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio working folder
+.vs/
+
+# Rider
+.idea/
+*.sln.iml
+
+# Auto-generated files
+Generated_Code/
+
+# Logs
+*.log
+
+# Backup & temporary files
+*.bak
+*.tmp
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Azure publish settings
+*.Publish.xml
+
+# Web Deploy publish profiles
+Properties/PublishProfiles/
+
+# NPM packages (if using front-end tooling)
+node_modules/
+
+# .NET Core tooling
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# DotCover
+*.dotCover
+
+# Coverage files
+coverage/
+*.coverage
+*.coveragexml
+
+# Visual Studio Code
+.vscode/
+
+# Database files
+*.mdf
+*.ldf
+*.ndf
+
+# Local environment settings
+appsettings.Production.json
+
+# Build cache
+*.dbmdl
+*.dbproj.schemaview
+*.pfx
+*.publishsettings
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+.nuget/
+
+# Entity Framework Migrations
+Migrations/
+
+# Others (if using static assets)
+wwwroot/dist/
+wwwroot/node_modules/
